@@ -1,4 +1,4 @@
-#- coding: utf-8
+# -*- coding: utf-8 -*-
 
 import numpy as np
 
@@ -10,7 +10,7 @@ class Board:
     Represent the game's board
     """
     def __init__(self):
-        self.calculus_board = np.zeros((6, 7), dtype= int)
+        self._calculus_board = np.zeros((6, 7), dtype= int)
         self.board = np.array([[None] * 7] * 6, dtype= object)
         self._vertical_filters = []
         self._horizontal_filters = []
@@ -73,10 +73,10 @@ class Board:
             return False
         token = Token(player)
         self.board[position_to_add, column_position] = token
-        self.calculus_board[position_to_add, column_position] = player.id
+        self._calculus_board[position_to_add, column_position] = player.id
         return True
     def calculus_board_of_player(self, player: Player):
-        return np.where(self.calculus_board == player.id, 1, 0)
+        return np.where(self._calculus_board == player.id, 1, 0)
     def check_game_state(self, player: Player) -> tuple[int, np.ndarray]:
         """
         Check if a player won the game
@@ -86,7 +86,7 @@ class Board:
         if np.where(self.board == None)[0].size == 0:
             # A draw we couldn't add any more token
             return 0, None
-        player_board = self.calculus_board(player)
+        player_board = self._calculus_board(player)
         for _filter in self._filters:
             filter_token = np.sum(np.multiply(_filter, player_board))
             if filter_token >= 4:
