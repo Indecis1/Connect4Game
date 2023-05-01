@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from src.Player import Player
+from src.player import Player
 
 class Token:
 

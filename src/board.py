@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from src.Player import Player
-from src.Token import Token
+from src.player import Player
+from src.token import Token
 
 class Board:
     """
@@ -75,9 +75,9 @@ class Board:
         self.board[position_to_add, column_position] = token
         self._calculus_board[position_to_add, column_position] = player.id
         return True
-    def calculus_board_of_player(self, player: Player):
+    def _calculus_board_of_player(self, player: Player):
         return np.where(self._calculus_board == player.id, 1, 0)
-    def check_game_state(self, player: Player) -> tuple[int, np.ndarray]:
+    def check_game_state_for_player(self, player: Player) -> tuple[int, np.ndarray]:
         """
         Check if a player won the game
         :param player: The player for whom we want to check if he won
@@ -92,3 +92,16 @@ class Board:
             if filter_token >= 4:
                 return 1, _filter
         return -1, None
+    # def _winning_positions(self, _filter: np.ndarray, player_board)-> list[tuple[int, int]]:
+    #     polling_matrix = np.ones((4,4), dtype=int)
+    #     positions = []
+    #     winning_board = np.multiply(_filter, player_board)
+    #     winning_board_positions = np.where(winning_board == 1)
+    #     for i in range(winning_board_positions[0].size):
+    #         positions.append((winning_board_positions[0][i], winning_board_positions[1][i]))
+    #     return positions
+    def check_game_state(self, players: list[Player]) -> bool:
+        for player in players:
+            if self.check_game_state_for_player(player):
+                return True
+

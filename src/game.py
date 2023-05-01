@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from src.Player import Player
+from src.board import Board
+from src.player import Player
 
 class Game:
     """
@@ -9,6 +10,7 @@ class Game:
 
     def __init__(self):
         self.players = []
+        self.board = Board()
 
     def create_player(self, name: str, color: str, token: str) -> None:
         """
@@ -21,3 +23,5 @@ class Game:
         player = Player(name, color, token=token)
         self.players.append(player)
 
+    def loop(self):
+        pass
