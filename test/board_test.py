@@ -10,6 +10,7 @@ from src.token import Token
 class BoardTest(unittest.TestCase):
     def setUp(self) -> None:
         self.board = Board()
+        Player.POSSIBLE_IDS = list(range(1, 10))
         self.player1 = Player("Player 1", "red")
         self.player2 = Player("Player 2", "green")
 
@@ -39,7 +40,7 @@ class BoardTest(unittest.TestCase):
         self.assertTrue(np.equal(self.board.board, board, dtype=object).all())
 
 
-    def test_game_won(self):
+    def test_game_vertical_won(self):
         self.board.add_token(6, self.player1)
         self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
         self.board.add_token(5, self.player2)
@@ -54,9 +55,52 @@ class BoardTest(unittest.TestCase):
         self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
         self.board.add_token(6, self.player1)
         result = self.board.check_game_state([self.player1, self.player2])
-        print(result[1])
         self.assertTrue(result[0])
         self.assertEqual(result[1], Rect(2, 6, 5, 6))
+
+    def test_game_horizontal_won(self):
+        self.board.add_token(6, self.player1)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(6, self.player2)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(5, self.player1)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(5, self.player2)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(4, self.player1)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(4, self.player2)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(3, self.player1)
+        result = self.board.check_game_state([self.player1, self.player2])
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], Rect(5, 3, 5, 6))
+
+    def test_game_diagonal_won(self):
+        self.board.add_token(6, self.player1)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(5, self.player2)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(5, self.player1)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(3, self.player2)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(4, self.player1)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(4, self.player2)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(4, self.player1)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(2, self.player2)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(3, self.player1)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(3, self.player2)
+        self.assertFalse(self.board.check_game_state([self.player1, self.player2])[0])
+        self.board.add_token(3, self.player1)
+        result = self.board.check_game_state([self.player1, self.player2])
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], Rect(2, 3, 5, 6))
 
 if __name__ == '__main__':
     unittest.main()

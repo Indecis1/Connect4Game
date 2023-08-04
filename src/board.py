@@ -95,7 +95,7 @@ class Board:
                 winning_filter_position = np.where(filter_sum == 4)
                 if winning_filter_position[0].size != 0:
                     rbc_winning_position = np.where(self.filters[winning_filter_position[0][0], winning_filter_position[1][0], :, :] == 1)
-                    win_board_position = Rect(top=i, left=j + rbc_winning_position[0][rbc_winning_position[0].size - 1], bottom=i + 3, right=j + rbc_winning_position[1][rbc_winning_position[1].size - 1])
+                    win_board_position = Rect(top=i + rbc_winning_position[0][0], left=j + rbc_winning_position[1][0], bottom=i + 3, right=j + rbc_winning_position[1][rbc_winning_position[1].size - 1])
                     return GameState.PLAYER_WIN, win_board_position
         return GameState.NOT_FINISH, Rect(-1, -1, -1, -1)
     def check_game_state(self, players: list[Player]) -> tuple[bool, Rect]:
