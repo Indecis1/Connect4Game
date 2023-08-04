@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+from numpy.lib.stride_tricks import as_strided
 
+from src.util import Rect
 from src.player import Player
 from src.token import Token
+from src.const import GameState as GameState
 
 class Board:
     """
@@ -12,33 +15,33 @@ class Board:
     def __init__(self):
         self._calculus_board = np.zeros((6, 7), dtype= int)
         self.board = np.array([[None] * 7] * 6, dtype= object)
-        self._vertical_filters = []
-        self._horizontal_filters = []
-        self._diagonal_filters = []
-        self._filters = []
+        self.vertical_filters = np.zeros((1,4,4), dtype= int)
+        self.horizontal_filters = np.zeros((1,4,4), dtype= int)
+        self.diagonal_filters = np.zeros((2,4,4), dtype= int)
+        self.filters = np.array([[]], dtype= int)
         self.__init_filter()
     def __init_filter(self) -> None:
         """
         Init the filter use to find if a player win
         :return:
         """
-        for i in range(7):
-            vertical_filter = np.zeros((6, 7), dtype= int)
-            vertical_filter[:,i] = np.ones(6)
-            self._vertical_filters.append(vertical_filter)
-        for i in range(6):
-            horizontal_filter = np.zeros((6, 7), dtype= int)
-            horizontal_filter[i, :] = np.ones(7)
-            self._horizontal_filters.append(horizontal_filter)
+        for i in range(4):
+            vertical_filter = np.zeros((1, 4, 4), dtype= int)
+            vertical_filter[:, :, i] = np.ones(4, dtype= int)
+            self.vertical_filters = np.append(self.vertical_filters, vertical_filter, axis=0)
 
-            if i != 6:
-                diagonal_filter = np.eye(6, 7, i)
-                self._diagonal_filters.append(diagonal_filter)
-            diagonal_filter = np.eye(6, 7, -i)
-            self._diagonal_filters.append(diagonal_filter)
-        self._filters.extend(self._vertical_filters)
-        self._filters.extend(self._horizontal_filters)
-        self._filters.extend(self._diagonal_filters)
+            horizontal_filter = np.zeros((1, 4, 4), dtype= int)
+            horizontal_filter[:, i, :] = np.ones(4, dtype= int)
+            self.horizontal_filters= np.append(self.horizontal_filters, horizontal_filter, axis=0)
+            if i == 0:
+                self.vertical_filters = np.delete(self.vertical_filters, 0, axis=0)
+                self.horizontal_filters = np.delete(self.horizontal_filters, 0, axis=0)
+
+        diagonal_filter = np.eye(4, 4, 0).reshape(1, 4, 4)
+        self.diagonal_filters = np.append(self.diagonal_filters, diagonal_filter, axis=0)
+        self.diagonal_filters = np.append(self.diagonal_filters, diagonal_filter[:, :, ::-1], axis=0)
+        self.filters = np.stack((self.vertical_filters, self.horizontal_filters, self.diagonal_filters), axis=0)
+
     def __could_add_token_to_column(self, column_position: int) -> bool:
         """
         Check if we could add a token to the colum
@@ -60,9 +63,9 @@ class Board:
         if empty_positions.size == 0:
             return -1
         return max(empty_positions)
-    def add_token(self, column_position, player: Player) -> bool:
+    def add_token(self, column_position: int, player: Player) -> bool:
         """
-        Add a new token to column
+        Add a new token to column [0-6]
         :param column_position: The position of the column in the board where we want to add a token
         :param player: The player who want to add a token
         :return: a bool that represent if we had add a token or not
@@ -75,33 +78,32 @@ class Board:
         self.board[position_to_add, column_position] = token
         self._calculus_board[position_to_add, column_position] = player.id
         return True
-    def _calculus_board_of_player(self, player: Player):
+    def _calculus_board_of_player(self, player: Player) -> np.ndarray :
         return np.where(self._calculus_board == player.id, 1, 0)
-    def check_game_state_for_player(self, player: Player) -> tuple[int, np.ndarray]:
+    def check_game_state_for_player(self, player: Player) -> tuple[GameState, Rect]:
         """
         Check if a player won the game
-        :param player: The player for whom we want to check if he won
-        :return: a number representing the state of the game and the filter use to find the winning position if any
+        :param player: The player we want to check the state
+        :return: a number representing the state of the game, the top left and bottom right corner of the winning position
         """
-        if np.where(self.board == None)[0].size == 0:
-            # A draw we couldn't add any more token
-            return 0, None
-        player_board = self._calculus_board(player)
-        for _filter in self._filters:
-            filter_token = np.sum(np.multiply(_filter, player_board))
-            if filter_token >= 4:
-                return 1, _filter
-        return -1, None
-    # def _winning_positions(self, _filter: np.ndarray, player_board)-> list[tuple[int, int]]:
-    #     polling_matrix = np.ones((4,4), dtype=int)
-    #     positions = []
-    #     winning_board = np.multiply(_filter, player_board)
-    #     winning_board_positions = np.where(winning_board == 1)
-    #     for i in range(winning_board_positions[0].size):
-    #         positions.append((winning_board_positions[0][i], winning_board_positions[1][i]))
-    #     return positions
-    def check_game_state(self, players: list[Player]) -> bool:
+        player_calculus_board = self._calculus_board_of_player(player)
+        board_strides = player_calculus_board.strides * 2
+        views: np.ndarray = as_strided(player_calculus_board, shape=(3, 4, 4, 4), strides=board_strides)
+        for i in range(views.shape[0]):
+            for j in range(views.shape[1]):
+                filter_sum = np.sum(self.filters * views[i, j, :, :], axis=(2, 3))
+                winning_filter_position = np.where(filter_sum == 4)
+                if winning_filter_position[0].size != 0:
+                    rbc_winning_position = np.where(self.filters[winning_filter_position[0][0], winning_filter_position[1][0], :, :] == 1)
+                    win_board_position = Rect(top=i, left=j + rbc_winning_position[0][rbc_winning_position[0].size - 1], bottom=i + 3, right=j + rbc_winning_position[1][rbc_winning_position[1].size - 1])
+                    return GameState.PLAYER_WIN, win_board_position
+        return GameState.NOT_FINISH, Rect(-1, -1, -1, -1)
+    def check_game_state(self, players: list[Player]) -> tuple[bool, Rect]:
         for player in players:
-            if self.check_game_state_for_player(player):
-                return True
+            player_state = self.check_game_state_for_player(player)
+            if player_state[0] != GameState.NOT_FINISH:
+                return True, player_state[1]
+        return False, Rect(-1 , -1, -1 , -1)
+
+
 
