@@ -7,3 +7,4 @@ class GameState(Enum):
     DRAW = 0
     PLAYER_WIN = 1
     NOT_FINISH = 10
+    PAUSE = 20

@@ -4,7 +4,7 @@ import numpy as np
 from src.board import Board
 from src.player import Player
 from src.util import Rect
-from src.token import Token
+from src.token_2 import Token
 
 
 class BoardTest(unittest.TestCase):
