@@ -102,6 +102,7 @@ foreach player compute a new board with 1 where he played and 0 where he didn't 
 With the new player board create all 4$`\times`$4 overlapping views.
 
 If we take for example a 5$`\times`$5 boars, here are all the overlapping views of this board
+
 ![connect4_doc](https://github.com/Indecis1/Connect4Game/assets/80837432/df64c304-0a0c-4159-a22c-c258ac2b7933)
 
 If we take connect 4 game the board which is 6$`\times`$7. we have 6-4+1 = 3 views in the first dimension and 7-4+1 = 4 
