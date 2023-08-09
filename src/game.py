@@ -47,7 +47,7 @@ class Game(IStorable):
         :return:
         """
         print("Welcome on the Connect 4 Game: \n")
-        print(self.board.board_to_str(), end="\n")
+        print(self.board.board_to_str(self.players), end="\n")
         i = 0
         if len(player_ids) == 0:
             return
@@ -61,24 +61,24 @@ class Game(IStorable):
                 if user_input < 0 or user_input > 6:
                     print("The column number should be between 0-6")
                     continue
-                is_token_added = self.board.add_token(user_input, player)
+                is_token_added = self.board.add_token(user_input, player.id)
                 result = self.board.check_game_state_for_player(player)
                 if result[0] != GameState.NOT_FINISH:
-                    print(self.board.board_to_str(), end="\n")
+                    print(self.board.board_to_str(self.players), end="\n")
                     break
                 if is_token_added:
                     i = (i + 1) % len(player_ids)
                     player = self.players.get(player_ids[i], None)
-            except Exception as e:
+            except ValueError:
                 print("you should provide a valid number")
-            print(self.board.board_to_str(), end="\n")
+            print(self.board.board_to_str(self.players), end="\n")
             print("{} playing ...\n".format(player.name))
         print("player {} won...\n".format(player.name))
 
 if __name__ == '__main__':
     game = Game()
-    player_ids = [game.create_player("Player1", "Red", "Circle"), game.create_player("Player2", "Green", "Cross")]
-    game.game_loop(player_ids)
+    players_ids = [game.create_player("Player1", "Red", "Circle"), game.create_player("Player2", "Green", "Cross")]
+    game.game_loop(players_ids)
 
 
 

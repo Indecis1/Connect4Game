@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import annotations
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 
@@ -14,6 +14,7 @@ class Board(IStorable):
     """
     def __init__(self):
         self._column_height = np.zeros(7, dtype=int)
+        self._history = []
         self.board = np.zeros((6, 7), dtype= int)
         self._vertical_filters = np.zeros((1, 4, 4), dtype= int)
         self._horizontal_filters = np.zeros((1, 4, 4), dtype= int)
@@ -59,18 +60,19 @@ class Board(IStorable):
         """
         return self._column_height[column_position]
 
-    def add_token(self, column_position: int, player: Player) -> bool:
+    def add_token(self, column_position: int, player_id: int) -> bool:
         """
         Add a new token to column [0-6]
         :param column_position: The position of the column in the board where we want to add a token
-        :param player: The player who want to add a token
+        :param player_id: id of the player who want to add a token
         :return: a bool that represent if we had add a token or not
         """
         if not self.__could_add_token_to_column(column_position):
             return False
         position_to_add = self.__position_to_add_token(column_position)
-        self.board[position_to_add, column_position] = player.id
+        self.board[position_to_add, column_position] = player_id
         self._column_height[column_position] += 1
+        self._history.append(column_position)
         return True
 
     def _calculus_board_of_player(self, player_id: int) -> np.ndarray :
@@ -105,6 +107,17 @@ class Board(IStorable):
         return False, Rect(-1 , -1, -1 , -1)
 
     @staticmethod
+    def replay(history: list[int], players: list[int], errors: list[str]) -> Board:
+        count = 0
+        board = Board()
+        for elt in history:
+            if board.add_token(elt, players[count % len(players)]):
+                count += 1
+            else:
+                errors.append("Replay: Could not play at column {}, iteration {}".format(elt, count))
+        return board
+
+    @staticmethod
     def load_from_json(data: dict, errors: list[str]) -> list[IStorable]:
         board_obj = data.get("board", None)
         if board_obj is None:
@@ -132,8 +145,13 @@ class Board(IStorable):
                 if elt == 0:
                     board_str += "|" + " "
                 else:
+                    if players is None:
+                        board_str += "| "
+                        continue
                     player: Player = players.get(elt, None)
-                    if player is None: board_str += "| "
+                    if player is None:
+                        board_str += "| "
+                        continue
                     board_str += "|" + Player.SHAPE.get(player.token, None)
             board_str += "\n"
             board_str += "-"* (2 * board.shape[1] - 1) + "\n"
