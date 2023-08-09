@@ -3,8 +3,9 @@
 from src.const import GameState
 from src.board import Board
 from src.player import Player
+from src.IStorable import IStorable
 
-class Game:
+class Game(IStorable):
     """
     This class implements the game logic player, board init and orchestrates the game
     """
@@ -31,6 +32,13 @@ class Game:
         player = Player(name, color, token=token)
         self.players[player.id] = player
         return player.id
+
+    @staticmethod
+    def load_from_json(json: dict, errors: list[str]) -> list[IStorable]:
+        pass
+
+    def save_to_json(self, data_to_saved: dict, errors: list[str]) -> dict:
+        pass
 
     def game_loop(self, player_ids: list[int]):
         """

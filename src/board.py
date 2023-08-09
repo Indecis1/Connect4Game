@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import json
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 
+from src.IStorable import IStorable
 from src.util import Rect
 from src.player import Player
 from src.token_2 import Token
 from src.const import GameState as GameState
 
-class Board:
+class Board(IStorable):
     """
     Represent the game's board
     """
@@ -20,6 +22,7 @@ class Board:
         self._diagonal_filters = np.zeros((2, 4, 4), dtype= int)
         self._filters = np.array([[]], dtype= int)
         self.__init_filter()
+
     def __init_filter(self) -> None:
         """
         Init the filter use to find if a player win
@@ -52,6 +55,7 @@ class Board:
         if column[0] is None:
             return True
         return False
+
     def __position_to_add_token(self, column_position: int) -> int:
         """
         Find the position to add a new token to a column if any
@@ -63,6 +67,7 @@ class Board:
         if empty_positions.size == 0:
             return -1
         return max(empty_positions)
+
     def add_token(self, column_position: int, player: Player) -> bool:
         """
         Add a new token to column [0-6]
@@ -78,8 +83,10 @@ class Board:
         self.board[position_to_add, column_position] = token
         self._calculus_board[position_to_add, column_position] = player.id
         return True
+
     def _calculus_board_of_player(self, player_id: int) -> np.ndarray :
         return np.where(self._calculus_board == player_id, 1, 0)
+
     def check_game_state_for_player(self, player: Player) -> tuple[GameState, Rect]:
         """
         Check if a player won the game
@@ -100,6 +107,7 @@ class Board:
         if np.where(self.board == None)[0].size == 0:
             return GameState.DRAW, Rect(-1, -1, -1, -1)
         return GameState.NOT_FINISH, Rect(-1, -1, -1, -1)
+
     def check_game_state(self, players: list[Player]) -> tuple[bool, Rect]:
         for player in players:
             player_state = self.check_game_state_for_player(player)
@@ -107,6 +115,17 @@ class Board:
                 return True, player_state[1]
         return False, Rect(-1 , -1, -1 , -1)
 
+    @staticmethod
+    def load_from_json(data: dict, errors: list[str]) -> list[IStorable]:
+        board_obj = data.get("board", None)
+        if board_obj is None:
+            errors.append("Board key not found in the saved game")
+            return []
+        board = Board()
+        pass
+
+    def save_to_json(self, data_to_saved: dict, errors: list[str]) -> dict:
+        pass
 
     def calculus_board_to_str(self, player_id: int):
         board_str = ""
