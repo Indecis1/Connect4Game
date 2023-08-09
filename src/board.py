@@ -91,7 +91,7 @@ class Board(IStorable):
                 winning_filter_position = np.where(filter_sum == 4)
                 if winning_filter_position[0].size != 0:
                     rbc_winning_position = np.where(self._filters[winning_filter_position[0][0], winning_filter_position[1][0], :, :] == 1)
-                    win_board_position = Rect(top=i + rbc_winning_position[0][0], left=j + rbc_winning_position[1][0], bottom=i + 3, right=j + rbc_winning_position[1][rbc_winning_position[1].size - 1])
+                    win_board_position = Rect(top= i + max(rbc_winning_position[0]), left= j + min(rbc_winning_position[1]), bottom= i + min(rbc_winning_position[0]), right=j + max(rbc_winning_position[1]))
                     return GameState.PLAYER_WIN, win_board_position
         if np.where(self.board == 0)[0].size == 0:
             return GameState.DRAW, Rect(-1, -1, -1, -1)

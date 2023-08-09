@@ -4,8 +4,6 @@ import numpy as np
 from src.board import Board
 from src.player import Player
 from src.util import Rect
-from src.token_2 import Token
-
 
 class BoardTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -20,18 +18,18 @@ class BoardTest(unittest.TestCase):
         self.player2 = None
 
     def test_add_one_token(self):
-        board = np.array([[None] * 7] * 6, dtype= object)
-        board[5, 6] = Token(self.player1)
+        board = np.zeros((6, 7), dtype= int)
+        board[0, 6] = self.player1.id
         self.board.add_token(6, self.player1)
         self.assertTrue(np.equal(self.board.board, board, dtype=object).all())
 
     def test_add_multiple_token(self):
-        board = np.array([[None] * 7] * 6, dtype= object)
-        board[5,6] = Token(self.player1)
-        board[5,5] = Token(self.player2)
-        board[4,6] = Token(self.player1)
-        board[5,3] = Token(self.player2)
-        board[5,4] = Token(self.player1)
+        board = np.zeros((6, 7), dtype= int)
+        board[0,6] = self.player1.id
+        board[0,5] = self.player2.id
+        board[1,6] = self.player1.id
+        board[0,3] = self.player2.id
+        board[0,4] = self.player1.id
         self.board.add_token(6, self.player1)
         self.board.add_token(5, self.player2)
         self.board.add_token(6, self.player1)
@@ -56,7 +54,8 @@ class BoardTest(unittest.TestCase):
         self.board.add_token(6, self.player1)
         result = self.board.check_game_state([self.player1, self.player2])
         self.assertTrue(result[0])
-        self.assertEqual(result[1], Rect(2, 6, 5, 6))
+        print(result[1])
+        self.assertEqual(result[1], Rect(3, 6, 0, 6))
 
     def test_game_horizontal_won(self):
         self.board.add_token(6, self.player1)
@@ -74,7 +73,7 @@ class BoardTest(unittest.TestCase):
         self.board.add_token(3, self.player1)
         result = self.board.check_game_state([self.player1, self.player2])
         self.assertTrue(result[0])
-        self.assertEqual(result[1], Rect(5, 3, 5, 6))
+        self.assertEqual(result[1], Rect(0, 3, 0, 6))
 
     def test_game_diagonal_won(self):
         self.board.add_token(6, self.player1)
@@ -100,7 +99,7 @@ class BoardTest(unittest.TestCase):
         self.board.add_token(3, self.player1)
         result = self.board.check_game_state([self.player1, self.player2])
         self.assertTrue(result[0])
-        self.assertEqual(result[1], Rect(2, 3, 5, 6))
+        self.assertEqual(result[1], Rect(3, 3, 0, 6))
 
 if __name__ == '__main__':
     unittest.main()
