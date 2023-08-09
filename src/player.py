@@ -9,6 +9,12 @@ from src.IStorable import IStorable
 class Player(IStorable):
 
     POSSIBLE_IDS = list(range(1, 10))
+
+    SHAPE = {
+        "cross": "X",
+        "circle": "O"
+    }
+
     def __init__(self, name: str, color: str, token: str = "Circle"):
         self.name = name
         self.color = color

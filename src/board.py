@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import json
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 
 from src.IStorable import IStorable
 from src.util import Rect
 from src.player import Player
-from src.token_2 import Token
 from src.const import GameState as GameState
 
 class Board(IStorable):
@@ -15,8 +13,8 @@ class Board(IStorable):
     Represent the game's board
     """
     def __init__(self):
-        self._calculus_board = np.zeros((6, 7), dtype= int)
-        self.board = np.array([[None] * 7] * 6, dtype= object)
+        self._column_height = np.zeros(7, dtype=int)
+        self.board = np.zeros((6, 7), dtype= int)
         self._vertical_filters = np.zeros((1, 4, 4), dtype= int)
         self._horizontal_filters = np.zeros((1, 4, 4), dtype= int)
         self._diagonal_filters = np.zeros((2, 4, 4), dtype= int)
@@ -51,10 +49,7 @@ class Board(IStorable):
         :param column_position: The position of the column in the board where we want to add a token
         :return: if we can or cannot add a new token to this column
         """
-        column = self.board[:, column_position]
-        if column[0] is None:
-            return True
-        return False
+        return self._column_height[column_position] < 6
 
     def __position_to_add_token(self, column_position: int) -> int:
         """
@@ -62,11 +57,7 @@ class Board(IStorable):
         :param column_position: The position of the column in the board where we want to add a token
         :return: The position where we should place the token if any otherwise return -1
         """
-        column = self.board[:, column_position]
-        empty_positions = np.where(column == None)[0]
-        if empty_positions.size == 0:
-            return -1
-        return max(empty_positions)
+        return self._column_height[column_position]
 
     def add_token(self, column_position: int, player: Player) -> bool:
         """
@@ -75,17 +66,15 @@ class Board(IStorable):
         :param player: The player who want to add a token
         :return: a bool that represent if we had add a token or not
         """
-        position_to_add = self.__position_to_add_token(column_position)
-        if position_to_add < 0:
-            # The column is full we can't add the token
+        if not self.__could_add_token_to_column(column_position):
             return False
-        token = Token(player)
-        self.board[position_to_add, column_position] = token
-        self._calculus_board[position_to_add, column_position] = player.id
+        position_to_add = self.__position_to_add_token(column_position)
+        self.board[position_to_add, column_position] = player.id
+        self._column_height[column_position] += 1
         return True
 
     def _calculus_board_of_player(self, player_id: int) -> np.ndarray :
-        return np.where(self._calculus_board == player_id, 1, 0)
+        return np.where(self.board == player_id, 1, 0)
 
     def check_game_state_for_player(self, player: Player) -> tuple[GameState, Rect]:
         """
@@ -104,7 +93,7 @@ class Board(IStorable):
                     rbc_winning_position = np.where(self._filters[winning_filter_position[0][0], winning_filter_position[1][0], :, :] == 1)
                     win_board_position = Rect(top=i + rbc_winning_position[0][0], left=j + rbc_winning_position[1][0], bottom=i + 3, right=j + rbc_winning_position[1][rbc_winning_position[1].size - 1])
                     return GameState.PLAYER_WIN, win_board_position
-        if np.where(self.board == None)[0].size == 0:
+        if np.where(self.board == 0)[0].size == 0:
             return GameState.DRAW, Rect(-1, -1, -1, -1)
         return GameState.NOT_FINISH, Rect(-1, -1, -1, -1)
 
@@ -121,7 +110,7 @@ class Board(IStorable):
         if board_obj is None:
             errors.append("Board key not found in the saved game")
             return []
-        board = Board()
+        #board = Board()
         pass
 
     def save_to_json(self, data_to_saved: dict, errors: list[str]) -> dict:
@@ -129,21 +118,23 @@ class Board(IStorable):
 
     def calculus_board_to_str(self, player_id: int):
         board_str = ""
-        board = self._calculus_board(player_id)
+        board = self.board(player_id)
         for i in range(board.shape[0]):
             board_str += "|".join(["X" if board[i, :] == 1 else " "]) + "\n"
             board_str += "-"* (2 * board.shape[1] - 1) + "\n"
         return board_str
 
-    def board_to_str(self):
+    def board_to_str(self, players: dict[str, Player]):
         board_str = ""
         board = self.board
         for i in range(board.shape[0]):
             for elt in board[i, :]:
-                if elt is None:
+                if elt == 0:
                     board_str += "|" + " "
                 else:
-                    board_str += "|" + elt.token_to_str()
+                    player: Player = players.get(elt, None)
+                    if player is None: board_str += "| "
+                    board_str += "|" + Player.SHAPE.get(player.token, None)
             board_str += "\n"
             board_str += "-"* (2 * board.shape[1] - 1) + "\n"
         return board_str
