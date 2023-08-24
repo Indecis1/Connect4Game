@@ -118,16 +118,18 @@ class Board(IStorable):
         return board
 
     @staticmethod
-    def load_from_json(data: dict, errors: list[str]) -> list[IStorable]:
-        board_obj = data.get("board", None)
-        if board_obj is None:
-            errors.append("Board key not found in the saved game")
+    def load_from_json(data: dict, errors: list[str]) -> list[Board]:
+        try:
+            history = data["board"]["history"]
+            players = data["game"]["play_order"]
+            return [Board.replay(history, players, errors)]
+        except Exception as ex:
+            errors.append("Board could not be init from the game save, {}".format(ex))
             return []
-        #board = Board()
-        pass
 
     def save_to_json(self, data_to_saved: dict, errors: list[str]) -> dict:
-        pass
+        data_to_saved["board"]["history"] = self._history
+        return data_to_saved
 
     def calculus_board_to_str(self, player_id: int):
         board_str = ""

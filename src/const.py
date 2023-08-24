@@ -8,3 +8,11 @@ class GameState(Enum):
     PLAYER_WIN = 1
     NOT_FINISH = 10
     PAUSE = 20
+
+class SaveConst(Enum):
+    Board = "Board"
+    Game = "game"
+    PLAYER = "players"
+
+    def __str__(self):
+        return self.value

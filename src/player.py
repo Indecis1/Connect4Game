@@ -5,6 +5,7 @@ from random import Random
 import inspect
 
 from src.IStorable import IStorable
+from src.const import *
 
 class Player(IStorable):
 
@@ -42,13 +43,15 @@ class Player(IStorable):
         return players
 
     def save_to_json(self, data: dict, errors: list[str]) -> dict:
-        player = {}
-        for elt in inspect.getmembers(self):
-            if not elt[0].startswith('_'):
-                if not inspect.ismethod(elt[1]):
-                    player.update({elt[0]: elt[1]})
-            data["players"].update({self.id: player})
+        if data.get(SaveConst.PLAYER.value, None) is not None:
+            data[SaveConst.PLAYER.value].update({self.id: self})
+        else:
+            data[SaveConst.PLAYER.value] = {self.id: self}
         return data
 
     def __eq__(self, other):
-        return self.id == other.id
+        if not type(other) == Player:
+            return False
+        return self.id == other.id and \
+        self.color == other.color and \
+        self.token == other.token
