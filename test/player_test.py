@@ -4,6 +4,7 @@ import unittest
 from src.player import Player
 from src.const import SaveConst
 
+
 class PlayerTest(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -41,7 +42,18 @@ class PlayerTest(unittest.TestCase):
         self.assertEqual(players[0], self.player1)
 
     def test_load_two_players(self):
-        pass
+        data = {}
+        errors: list[str] = []
+        data = self.player1.save_to_json(data, errors)
+        self.assertTrue(len(errors) == 0)
+        data = self.player2.save_to_json(data, errors)
+        self.assertTrue(len(errors) == 0)
+        json_str = json.dumps(data)
+        json_dict = json.loads(json_str)
+        players = Player.load_from_json(json_dict, errors)
+        self.assertEqual(players[0], self.player1)
+        self.assertEqual(players[1], self.player2)
+
 
 if __name__ == '__main__':
     unittest.main()

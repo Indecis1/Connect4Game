@@ -7,19 +7,22 @@ from src.IStorable import IStorable
 from src.util import Rect
 from src.player import Player
 from src.const import GameState as GameState
+from src.const import SaveConst
+
 
 class Board(IStorable):
     """
     Represent the game's board
     """
+
     def __init__(self):
         self._column_height = np.zeros(7, dtype=int)
         self._history = []
-        self.board = np.zeros((6, 7), dtype= int)
-        self._vertical_filters = np.zeros((1, 4, 4), dtype= int)
-        self._horizontal_filters = np.zeros((1, 4, 4), dtype= int)
-        self._diagonal_filters = np.zeros((2, 4, 4), dtype= int)
-        self._filters = np.array([[]], dtype= int)
+        self.board = np.zeros((6, 7), dtype=int)
+        self._vertical_filters = np.zeros((1, 4, 4), dtype=int)
+        self._horizontal_filters = np.zeros((1, 4, 4), dtype=int)
+        self._diagonal_filters = np.zeros((2, 4, 4), dtype=int)
+        self._filters = np.array([[]], dtype=int)
         self.__init_filter()
 
     def __init_filter(self) -> None:
@@ -28,13 +31,13 @@ class Board(IStorable):
         :return:
         """
         for i in range(4):
-            vertical_filter = np.zeros((1, 4, 4), dtype= int)
-            vertical_filter[:, :, i] = np.ones(4, dtype= int)
+            vertical_filter = np.zeros((1, 4, 4), dtype=int)
+            vertical_filter[:, :, i] = np.ones(4, dtype=int)
             self._vertical_filters = np.append(self._vertical_filters, vertical_filter, axis=0)
 
-            horizontal_filter = np.zeros((1, 4, 4), dtype= int)
-            horizontal_filter[:, i, :] = np.ones(4, dtype= int)
-            self._horizontal_filters= np.append(self._horizontal_filters, horizontal_filter, axis=0)
+            horizontal_filter = np.zeros((1, 4, 4), dtype=int)
+            horizontal_filter[:, i, :] = np.ones(4, dtype=int)
+            self._horizontal_filters = np.append(self._horizontal_filters, horizontal_filter, axis=0)
             if i == 0:
                 self._vertical_filters = np.delete(self._vertical_filters, 0, axis=0)
                 self._horizontal_filters = np.delete(self._horizontal_filters, 0, axis=0)
@@ -75,14 +78,13 @@ class Board(IStorable):
         self._history.append(column_position)
         return True
 
-    def _calculus_board_of_player(self, player_id: int) -> np.ndarray :
+    def _calculus_board_of_player(self, player_id: int) -> np.ndarray:
         return np.where(self.board == player_id, 1, 0)
 
     def check_game_state_for_player(self, player: Player) -> tuple[GameState, Rect]:
         """
-        Check if a player won the game
-        :param player: The player we want to check the state
-        :return: a number representing the state of the game, the top left and bottom right corner of the winning position
+        Check if a player won the game :param player: The player we want to check the state :return: a number
+        representing the state of the game, the top left and bottom right corner of the winning position
         """
         player_calculus_board = self._calculus_board_of_player(player.id)
         board_strides = player_calculus_board.strides * 2
@@ -92,8 +94,12 @@ class Board(IStorable):
                 filter_sum = np.sum(self._filters * views[i, j, :, :], axis=(2, 3))
                 winning_filter_position = np.where(filter_sum == 4)
                 if winning_filter_position[0].size != 0:
-                    rbc_winning_position = np.where(self._filters[winning_filter_position[0][0], winning_filter_position[1][0], :, :] == 1)
-                    win_board_position = Rect(top= i + max(rbc_winning_position[0]), left= j + min(rbc_winning_position[1]), bottom= i + min(rbc_winning_position[0]), right=j + max(rbc_winning_position[1]))
+                    rbc_winning_position = np.where(
+                        self._filters[winning_filter_position[0][0], winning_filter_position[1][0], :, :] == 1)
+                    win_board_position = Rect(top=i + max(rbc_winning_position[0]),
+                                              left=j + min(rbc_winning_position[1]),
+                                              bottom=i + min(rbc_winning_position[0]),
+                                              right=j + max(rbc_winning_position[1]))
                     return GameState.PLAYER_WIN, win_board_position
         if np.where(self.board == 0)[0].size == 0:
             return GameState.DRAW, Rect(-1, -1, -1, -1)
@@ -104,7 +110,7 @@ class Board(IStorable):
             player_state = self.check_game_state_for_player(player)
             if player_state[0] != GameState.NOT_FINISH:
                 return True, player_state[1]
-        return False, Rect(-1 , -1, -1 , -1)
+        return False, Rect(-1, -1, -1, -1)
 
     @staticmethod
     def replay(history: list[int], players: list[int], errors: list[str]) -> Board:
@@ -120,24 +126,35 @@ class Board(IStorable):
     @staticmethod
     def load_from_json(data: dict, errors: list[str]) -> list[Board]:
         try:
-            history = data["board"]["history"]
-            players = data["game"]["play_order"]
+            history = data[SaveConst.BOARD.value][SaveConst.BOARD_HISTORY.value]
+            players = data[SaveConst.GAME.value][SaveConst.PLAY_ORDER.value]
             return [Board.replay(history, players, errors)]
         except Exception as ex:
             errors.append("Board could not be init from the game save, {}".format(ex))
             return []
 
     def save_to_json(self, data_to_saved: dict, errors: list[str]) -> dict:
-        data_to_saved["board"]["history"] = self._history
+        if data_to_saved.get(SaveConst.BOARD.value, None) is not None:
+            data_to_saved[SaveConst.BOARD.value].update({SaveConst.BOARD_HISTORY.value: self._history})
+        else:
+            data_to_saved[SaveConst.BOARD.value] = {SaveConst.BOARD_HISTORY.value: self._history}
         return data_to_saved
 
     def calculus_board_to_str(self, player_id: int):
         board_str = ""
-        board = self.board(player_id)
+        board = np.where(self.board == player_id, 1, 0)
         for i in range(board.shape[0]):
             board_str += "|".join(["X" if board[i, :] == 1 else " "]) + "\n"
-            board_str += "-"* (2 * board.shape[1] - 1) + "\n"
+            board_str += "-" * (2 * board.shape[1] - 1) + "\n"
         return board_str
+
+    def __eq__(self, other):
+        if type(other) == Board:
+            return self._history == other._history
+        elif type(other) == dict:
+            return self._history == other.get(SaveConst.BOARD.value, {}).get(SaveConst.BOARD_HISTORY.value, None)
+        else:
+            return False
 
     def board_to_str(self, players: dict[str, Player]):
         board_str = ""
@@ -156,7 +173,5 @@ class Board(IStorable):
                         continue
                     board_str += "|" + Player.SHAPE.get(player.token, None)
             board_str += "\n"
-            board_str += "-"* (2 * board.shape[1] - 1) + "\n"
+            board_str += "-" * (2 * board.shape[1] - 1) + "\n"
         return board_str
-
-

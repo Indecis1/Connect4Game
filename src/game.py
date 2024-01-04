@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import json
 
-from src.const import GameState
+from src.const import GameState, SaveConst
 from src.board import Board
 from src.player import Player
 from src.IStorable import IStorable
+
 
 class Game(IStorable):
     """
@@ -60,12 +61,12 @@ class Game(IStorable):
         pass
 
     def save_to_json(self, data_to_saved: dict, errors: list[str]) -> dict:
-        data_to_saved["game"] = {}
+        data_to_saved[SaveConst.GAME.value] = {}
         for player_id in self.players:
             self.players[player_id].save_to_json(data_to_saved, errors)
         data_to_saved = self.board.save_to_json(data_to_saved, errors)
-        data_to_saved["game"]["game_state"] = self.game_state
-        data_to_saved["game"]["play_order"] = self.play_order
+        data_to_saved[SaveConst.GAME.value][SaveConst.GAME_STATE.value] = self.game_state.value
+        data_to_saved[SaveConst.GAME.value][SaveConst.PLAY_ORDER.value] = self.play_order
         return data_to_saved
 
     def save(self, filepath: str, errors: list[str]) -> bool:
@@ -86,6 +87,20 @@ class Game(IStorable):
         with open(filepath, "r", encoding="utf-8") as file:
             data = json.load(file)
         return Game.load_from_json(data, errors)[0]
+
+    def __eq__(self, other):
+        if type(other) == Game:
+            return self.board == other.board and \
+                self.players == other.players and\
+                self.play_order == other.play_order and \
+                self.game_state == other.game_state
+        elif type(other) == dict:
+            return self.board == other.get(SaveConst.BOARD.value, -1) and \
+                self.players == other.get(SaveConst.PLAYER.value, None) and \
+                self.play_order == other.get(SaveConst.PLAY_ORDER.value, None) and \
+                self.game_state == other.get(SaveConst.GAME_STATE.value, None)
+        else:
+            return False
 
     def game_loop(self):
         """
@@ -121,10 +136,8 @@ class Game(IStorable):
             print("{} playing ...\n".format(player.name))
         print("player {} won...\n".format(player.name))
 
+
 if __name__ == '__main__':
     game = Game()
     players_ids = [game.create_player("Player1", "Red", "Circle"), game.create_player("Player2", "Green", "Cross")]
     game.game_loop()
-
-
-
