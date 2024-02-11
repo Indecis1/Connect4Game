@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import json
 
-from src.const import GameState, SaveConst
-from src.board import Board
-from src.player import Player
-from src.IStorable import IStorable
+from src.core.const import GameState, SaveConst
+from src.core.board import Board
+from src.core.player import Player
+from src.core.IStorable import IStorable
 
 
 class Game(IStorable):

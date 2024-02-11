@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
 
-from src.board import Board
-from src.player import Player
-from src.util import Rect
+from src.core.board import Board
+from src.core.player import Player
+from src.core.util import Rect
 
 
 class BoardTest(unittest.TestCase):

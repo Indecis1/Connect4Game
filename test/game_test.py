@@ -1,10 +1,8 @@
 import json
-import os
-import tempfile
 import unittest
 
-from src.game import Game
-from src.player import Player
+from src.core.game import Game
+from src.core.player import Player
 
 
 class GameTest(unittest.TestCase):

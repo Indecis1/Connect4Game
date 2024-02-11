@@ -1,8 +1,8 @@
 import json
 import unittest
 
-from src.player import Player
-from src.const import SaveConst
+from src.core.player import Player
+from src.core.const import SaveConst
 
 
 class PlayerTest(unittest.TestCase):

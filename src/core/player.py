@@ -2,8 +2,8 @@
 from __future__ import annotations
 from random import Random
 
-from src.IStorable import IStorable
-from src.const import *
+from src.core.IStorable import IStorable
+from src.core.const import *
 
 
 class Player(IStorable):

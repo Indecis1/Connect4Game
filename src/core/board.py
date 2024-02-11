@@ -3,11 +3,10 @@ from __future__ import annotations
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 
-from src.IStorable import IStorable
-from src.util import Rect
-from src.player import Player
-from src.const import GameState as GameState
-from src.const import SaveConst
+from src.core.IStorable import IStorable
+from src.core.util import Rect
+from src.core.player import Player
+from src.core.const import GameState, SaveConst
 
 
 class Board(IStorable):
